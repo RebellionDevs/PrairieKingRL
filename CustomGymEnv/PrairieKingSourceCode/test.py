@@ -13,7 +13,7 @@ clock = pygame.time.Clock()
 
 spritesheet = pygame.image.load(SPRITESHEET_PATH).convert_alpha()  
 
-powerup = CowboyPowerup(2, (320, 240), 10000)
+powerup = CowboyPowerup(3, (320, 240), 10000)
 
 running = True
 while running:
