@@ -2303,18 +2303,6 @@ public class AbigailGame : IMinigame
 		}
 	}
 
-	public void startAbigailPortrait(int whichExpression, string sayWhat)
-	{
-		if (abigail != null && abigailPortraitTimer <= 0)
-		{
-			abigailPortraitTimer = 6000;
-			AbigailDialogue = sayWhat;
-			abigailPortraitExpression = whichExpression;
-			abigailPortraitYposition = Game1.viewport.Height;
-			Game1.playSound("dwop");
-		}
-	}
-
 	public void startNewRound()
 	{
 		gamerestartTimer = 2000;
