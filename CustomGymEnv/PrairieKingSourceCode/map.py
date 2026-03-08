@@ -10,7 +10,7 @@ class Map():
         self.visibleSprites = pygame.sprite.Group()
         self.obstaclesSprites = pygame.sprite.Group()
 
-    def get_map(self, wave):
+    def getMap(self, wave):
         newMap = [[0 for _ in range(16)] for _ in range(16)]
 
         for i in range(16):
