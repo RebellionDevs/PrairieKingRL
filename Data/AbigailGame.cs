@@ -21,32 +21,6 @@ public class AbigailGame : IMinigame
 		MAX
 	}
 
-	public class CowboyPowerup
-	{
-		public int which;
-
-		public Point position;
-
-		public int duration;
-
-		public float yOffset;
-
-		public CowboyPowerup(int which, Point position, int duration)
-		{
-			this.which = which;
-			this.position = position;
-			this.duration = duration;
-		}
-
-		public void draw(SpriteBatch b)
-		{
-			if (duration > 2000 || duration / 200 % 2 == 0)
-			{
-				b.Draw(Game1.mouseCursors, topLeftScreenCoordinate + new Vector2(position.X, (float)position.Y + yOffset), new Rectangle(272 + which * 16, 1808, 16, 16), Color.White, 0f, Vector2.Zero, 3f, SpriteEffects.None, (float)position.Y / 10000f + 0.001f);
-			}
-		}
-	}
-
 	public class JOTPKProgress : INetObject<NetFields>
 	{
 		public NetInt bulletDamage = new NetInt();
