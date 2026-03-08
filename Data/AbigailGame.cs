@@ -35,6 +35,32 @@ public class AbigailGame : IMinigame
 		MAX
 	}
 
+	public class CowboyPowerup
+	{
+		public int which;
+
+		public Point position;
+
+		public int duration;
+
+		public float yOffset;
+
+		public CowboyPowerup(int which, Point position, int duration)
+		{
+			this.which = which;
+			this.position = position;
+			this.duration = duration;
+		}
+
+		public void draw(SpriteBatch b)
+		{
+			if (duration > 2000 || duration / 200 % 2 == 0)
+			{
+				b.Draw(Game1.mouseCursors, topLeftScreenCoordinate + new Vector2(position.X, (float)position.Y + yOffset), new Rectangle(272 + which * 16, 1808, 16, 16), Color.White, 0f, Vector2.Zero, 3f, SpriteEffects.None, (float)position.Y / 10000f + 0.001f);
+			}
+		}
+	}
+
 	public class JOTPKProgress : INetObject<NetFields>
 	{
 		public NetInt bulletDamage = new NetInt();
@@ -86,6 +112,43 @@ public class AbigailGame : IMinigame
 				.AddField(world, "world")
 				.AddField(waveTimer, "waveTimer")
 				.AddField(monsterChances, "monsterChances");
+		}
+	}
+
+	public class CowboyBullet
+	{
+		public Point position;
+
+		public Point motion;
+
+		public int damage;
+
+		public CowboyBullet(Point position, Point motion, int damage)
+		{
+			this.position = position;
+			this.motion = motion;
+			this.damage = damage;
+		}
+
+		public CowboyBullet(Point position, int direction, int damage)
+		{
+			this.position = position;
+			switch (direction)
+			{
+			case 0:
+				motion = new Point(0, -8);
+				break;
+			case 1:
+				motion = new Point(8, 0);
+				break;
+			case 2:
+				motion = new Point(0, 8);
+				break;
+			case 3:
+				motion = new Point(-8, 0);
+				break;
+			}
+			this.damage = damage;
 		}
 	}
 
@@ -2300,6 +2363,18 @@ public class AbigailGame : IMinigame
 				Game1.currentMinigame = null;
 				Game1.currentLocation.currentEvent.CurrentCommand++;
 			}
+		}
+	}
+
+	public void startAbigailPortrait(int whichExpression, string sayWhat)
+	{
+		if (abigail != null && abigailPortraitTimer <= 0)
+		{
+			abigailPortraitTimer = 6000;
+			AbigailDialogue = sayWhat;
+			abigailPortraitExpression = whichExpression;
+			abigailPortraitYposition = Game1.viewport.Height;
+			Game1.playSound("dwop");
 		}
 	}
 
