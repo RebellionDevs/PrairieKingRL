@@ -1,6 +1,7 @@
 import sys
 from settings import *
 from debug import debug
+from map import Map
 
 class Game:
     def __init__(self):
@@ -9,6 +10,8 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("PrairieKing")
         self.clock = pygame.time.Clock()
+
+        self.map = Map()
 
     def run(self):
         while True:
@@ -19,6 +22,7 @@ class Game:
 
             self.screen.fill('black')
             debug(FPS)
+            self.map.run()
             pygame.display.update()
             self.clock.tick(FPS)
 
