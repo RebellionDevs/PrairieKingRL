@@ -22,7 +22,7 @@ class Map():
                 elif i == 1 or i == 14 or j == 1 or j == 14:
                     newMap[i][j] = 2
                 else:
-                    newMap[i][j] = 4 if random < 0.1 else 3
+                    newMap[i][j] = 4 if random() < 0.1 else 3
 
         if wave == -1:
             for i in range(16):
@@ -33,7 +33,7 @@ class Map():
             newMap[5][0] = 0; newMap[10][2] = 2; newMap[15][2] = 1
             newMap[14][12] = 5; newMap[10][6] = 7
 
-            for j in range(10, 15) : newMap[i][6] = 7
+            for i in range(10, 15) : newMap[i][6] = 7
             for j in range(6, 14) : newMap[14][j] = 7
 
             for i in range(16):
@@ -66,8 +66,8 @@ class Map():
             for i in range(16):
                 for j in range(16):
                     if  newMap[i][j] == 5:
-                         newMap[i][j] = random.choice([0, 1])
-                newMap[i][8] = random.choice([8, 9])
+                         newMap[i][j] = choice([0, 1])
+                newMap[i][8] = choice([8, 9])
             newMap[8][4] = 7;  newMap[8][12] = 7;  newMap[9][12] = 7;  newMap[7][12] = 7
             newMap[5][6] = 5;  newMap[10][6] = 5
 
@@ -78,7 +78,7 @@ class Map():
             for r in [4, 8, 12]:
                 newMap[r][5] = 10
                 newMap[r][10] = 10
-
+            
         elif wave == 12:
             for i in range(16):
                 for j in range(16):
