@@ -1305,8 +1305,6 @@ public class AbigailGame : IMinigame
 		}
 	}
 
-	/// <summary>Construct an instance.</summary>
-	/// <param name="abigail">The Abigail NPC whose dialogues to show, if playing with Abigail.</param>
 	public AbigailGame(NPC abigail = null)
 	{
 		this.abigail = abigail;
@@ -1334,7 +1332,7 @@ public class AbigailGame : IMinigame
 		onStartMenu = false;
 	}
 
-	public void ApplyNewGamePlus()
+	public void Appl/// <param name="abigail">The Abigail NPC whose dialogues to show, if playing with Abigail.</param>yNewGamePlus()
 	{
 		monsterChances[0] = new Vector2(0.014f + (float)whichRound * 0.005f, 0.41f + (float)whichRound * 0.05f);
 		monsterChances[4] = new Vector2(0.002f, 0.1f);
@@ -1431,11 +1429,6 @@ public class AbigailGame : IMinigame
 		return movementSpeed;
 	}
 
-	/// <summary>
-	/// return true if powerup should be removed
-	/// </summary>
-	/// <param name="c"></param>
-	/// <returns></returns>
 	public bool getPowerUp(CowboyPowerup c)
 	{
 		switch (c.which)
