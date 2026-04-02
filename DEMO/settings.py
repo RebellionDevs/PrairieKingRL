@@ -1,0 +1,7 @@
+
+WIDTH = 640
+HEIGHT = 640
+
+FPS = 60
+
+TILESIZE = 64
