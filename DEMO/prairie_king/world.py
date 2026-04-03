@@ -24,23 +24,35 @@ class World:
 
     def create_map(self, index: int):
         self.map_data = get_map(index)
+        self.visible_sprites.empty()
+        self.obstacle_sprites.empty()
 
         for row_index, row in enumerate(self.map_data):
             for col_index, tile_type in enumerate(row):
                 x = col_index * TILESIZE
                 y = row_index * TILESIZE
 
-                if tile_type == 99:                     
-                    self.player = Player((x, y), [self.visible_sprites], self.obstacle_sprites)
+                tile = Tile((x, y), [self.visible_sprites], tile_type)
+                if tile_type == 1:
+                    self.obstacle_sprites.add(tile)
 
-                else:
-                    tile = Tile((x, y), [self.visible_sprites], tile_type)
+        center_x = (WIDTH // 2) - (TILESIZE // 2)
+        center_y = (HEIGHT // 2) - (TILESIZE // 2)
 
-                    if tile_type == 1:
-                        self.obstacle_sprites.add(tile)
+        self.player = Player((center_x, center_y), [self.visible_sprites], self.obstacle_sprites)
 
     def step(self, action: int):
-        dirs = {0: (0, 0), 1: (0, -1), 2: (0, 1), 3: (-1, 0), 4: (1, 0)}
+        dirs = {
+            0: (0, 0),
+            1: (0, -1),
+            2: (0, 1),
+            3: (-1, 0),
+            4: (1, 0),
+            5: (-1, -1),
+            6: (1, -1),
+            7: (-1, 1),
+            8: (1, 1),
+        }
         dx, dy = dirs.get(action, (0, 0))
 
         if self.player:
@@ -50,9 +62,14 @@ class World:
     def render(self, surface=None):
         if surface is None:
             return
-
         surface.fill('black')
-        self.visible_sprites.draw(surface)
+
+        for sprite in self.visible_sprites:
+            if not isinstance(sprite, Player):
+                surface.blit(sprite.image, sprite.rect)
+
+        if self.player:
+            surface.blit(self.player.image, self.player.rect)
 
     def set_surface(self, surface):
         self.display_surface = surface

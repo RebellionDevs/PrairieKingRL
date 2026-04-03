@@ -11,18 +11,21 @@ class PrairieKingEnv(gym.Env):
     def __init__(self, render_mode=None):
         super().__init__()
         self.render_mode = render_mode
+        
+        if render_mode == "human":
+            pygame.init()
+
         self.world = World()
 
         self.action_space = spaces.Discrete(5)
-
         self.observation_space = spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
 
         self.screen = None
         self.clock = None
         if render_mode == "human":
-            pygame.init()
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
             self.clock = pygame.time.Clock()
+            pygame.display.set_caption("Prairie King RL")
 
     def reset(self, seed=None, options=None):
         self.world.reset(level=1)
