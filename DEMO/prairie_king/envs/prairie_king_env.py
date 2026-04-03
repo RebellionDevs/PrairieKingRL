@@ -13,14 +13,10 @@ class PrairieKingEnv(gym.Env):
         self.render_mode = render_mode
         self.world = World()
 
-        # Action: 0=noop, 1=up, 2=down, 3=left, 4=right
         self.action_space = spaces.Discrete(5)
 
-        # Simple vector obs for now (player x/y normalized). Fast for training.
-        # You can change to pixel obs later (see comment below).
         self.observation_space = spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
 
-        # Human mode only: real window
         self.screen = None
         self.clock = None
         if render_mode == "human":
@@ -37,9 +33,9 @@ class PrairieKingEnv(gym.Env):
     def step(self, action):
         self.world.step(action)
         obs = self._get_obs()
-        reward = 0.01  # tiny survival reward (you can change later)
+        reward = 0.01
         terminated = False
-        truncated = False  # you can add max steps later
+        truncated = False
         info = {}
 
         if self.render_mode == "human":
@@ -49,7 +45,6 @@ class PrairieKingEnv(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def _get_obs(self):
-        # Vector obs based on current ready code only
         px = self.world.player.rect.centerx / WIDTH
         py = self.world.player.rect.centery / HEIGHT
         return np.array([px, py], dtype=np.float32)
