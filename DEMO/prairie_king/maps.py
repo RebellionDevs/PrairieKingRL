@@ -55,11 +55,9 @@ MAP_3 = [
     [1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 1, 1, 1, 1, 1, 1],
 ]
 
+MAPS = {1 : MAP_1, 2 : MAP_2, 3 : MAP_3}
+
 def get_map(index: int):
-    if index == 1:
-        return MAP_1
-    elif index == 2:
-        return MAP_2
-    elif index == 3:
-        return MAP_3
-    raise ValueError(f"Map {index} not found")
+    if index not in MAPS:
+        raise ValueError(f"Map {index} not found")
+    return MAPS[index]

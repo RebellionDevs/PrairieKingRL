@@ -3,17 +3,19 @@ from .maps import get_map
 from .constants import TILESIZE, WIDTH, HEIGHT
 from .entities.tile import Tile
 from .entities.player import Player
+from .entities.bullet import Bullet
 
 
 class World:
     def __init__(self):
         self.visible_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
-
-        # self.bullet_sprites = pygame.sprite.Group()
-        # self.enemy_sprites = pygame.sprite.Group()
+        self.bullet_sprites = pygame.sprite.Group()
 
         self.player = None
+        self.shoot_cooldown = 0
+        self.shoot_rate = 26
+
         self.map_data = None
         self.reset(level=1)
 
@@ -33,13 +35,28 @@ class World:
                 y = row_index * TILESIZE
 
                 tile = Tile((x, y), [self.visible_sprites], tile_type)
-                if tile_type == 1:
+                if tile_type == 1 or tile_type == 6:
                     self.obstacle_sprites.add(tile)
 
         center_x = (WIDTH // 2) - (TILESIZE // 2)
         center_y = (HEIGHT // 2) - (TILESIZE // 2)
 
         self.player = Player((center_x, center_y), [self.visible_sprites], self.obstacle_sprites)
+
+    def shoot(self, direction):
+        if not self.player or self.shoot_cooldown > 0: 
+            return
+
+        offset = (direction[0] * 28, direction[1] * 28)
+        spawn_pos = (
+            self.player.rect.centerx + offset[0],
+            self.player.rect.centery + offset[1]
+        )
+
+        Bullet(spawn_pos, direction, [self.visible_sprites, self.bullet_sprites], self.obstacle_sprites)
+
+        self.shoot_cooldown = self.shoot_rate
+
 
     def step(self, action: int):
         dirs = {
@@ -59,6 +76,10 @@ class World:
             self.player.set_direction(dx, dy)
             self.player.update()
 
+        self.bullet_sprites.update()
+
+        if self.shoot_cooldown > 0: self.shoot_cooldown -= 1
+
     def render(self, surface=None):
         if surface is None:
             return
@@ -67,6 +88,8 @@ class World:
         for sprite in self.visible_sprites:
             if not isinstance(sprite, Player):
                 surface.blit(sprite.image, sprite.rect)
+
+        self.bullet_sprites.draw(surface)
 
         if self.player:
             surface.blit(self.player.image, self.player.rect)

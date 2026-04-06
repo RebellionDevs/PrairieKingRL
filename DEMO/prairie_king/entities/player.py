@@ -11,8 +11,7 @@ class Player(pygame.sprite.Sprite):
         try:
             original_image = pygame.image.load('assets/cowboy_idle.png').convert_alpha()
             self.image = pygame.transform.scale_by(original_image, 4)
-        except Exception as e:
-            print(f"Warning: Could not load cowboy_idle.png ({e}). Using fallback.")
+        except Exception:
             self.image = pygame.Surface((TILESIZE * 2, TILESIZE * 2), pygame.SRCALPHA)
             self.image.fill((255, 215, 0, 200))
             pygame.draw.rect(self.image, (139, 69, 19), (25, 35, 35, 55))
