@@ -28,7 +28,7 @@ class PrairieKingEnv(gym.Env):
         self.observation_space = spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
 
     def reset(self, seed=None, options=None):
-        self.world.reset(level=1)
+        self.world.reset(level=2)
         if self.render_mode == "human":
             self.render()
         return self._get_obs(), {}

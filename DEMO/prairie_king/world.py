@@ -26,14 +26,9 @@ class World:
         self.wave_duration = 5400
         self.spawn_timer = 0
 
-        self.left_blocked = False
-        self.right_blocked = False
-        self.top_blocked = False
-        self.bottom_blocked = False
-
         self.reset(level=1)
 
-    def reset(self, level: int = 1):
+    def reset(self, level):
         self.visible_sprites.empty()
         self.obstacle_sprites.empty()
         self.bullet_sprites.empty()
@@ -45,10 +40,7 @@ class World:
         self.wave_timer = 0
         self.spawn_timer = 180
 
-        self.left_blocked = self.right_blocked = self.top_blocked = self.bottom_blocked = False
-
         self.create_map(level)
-        print(f"→ Started Level {level}")
 
     def create_map(self, index: int):
         self.map_data = get_map(index)
@@ -72,8 +64,8 @@ class World:
         if not self.player or not self.player.alive:
             return
 
-        dirs = {0:(0,0),1:(0,-1),2:(0,1),3:(-1,0),4:(1,0),
-                5:(-1,-1),6:(1,-1),7:(-1,1),8:(1,1)}
+        dirs = {0: (0, 0), 1: (0, -1), 2: (0, 1), 3: (-1, 0), 4: (1, 0),
+                5: (-1, -1), 6: (1, -1), 7: (-1, 1), 8: (1, 1)}
         dx, dy = dirs.get(move_action, (0, 0))
         self.player.set_direction(dx, dy)
         self.player.update()
@@ -94,8 +86,8 @@ class World:
 
         hits = pygame.sprite.groupcollide(self.bullet_sprites, self.enemy_sprites, True, False)
         for bullet, enemies in hits.items():
-            for enemy in enemies:
-                enemy.take_damage(1)
+            if enemies:
+                enemies[0].take_damage(1)
 
         if pygame.sprite.spritecollideany(self.player, self.enemy_sprites):
             self.player.take_damage()
@@ -111,27 +103,30 @@ class World:
         groups = self._group_by_side(spawn_points)
 
         for side, points in groups.items():
-            if not points:
-                continue
-
-            blocked = (side == 'left' and self.left_blocked) or \
-                      (side == 'right' and self.right_blocked) or \
-                      (side == 'top' and self.top_blocked) or \
-                      (side == 'bottom' and self.bottom_blocked)
-            if blocked:
+            clear_points = self._get_clear_points(points)
+            if not clear_points:
                 continue
 
             if self.current_level == 1:
-                self._spawn_standard_group(points)
+                self._spawn_standard_group(clear_points)
             else:
-                if random.random() < 0.25:
-                    self._spawn_spikey(points)
-                    if side == 'left': self.left_blocked = True
-                    elif side == 'right': self.right_blocked = True
-                    elif side == 'top': self.top_blocked = True
-                    elif side == 'bottom': self.bottom_blocked = True
+                if random.random() < 0.15:
+                    self._spawn_spikey(clear_points)
                 else:
-                    self._spawn_standard_group(points)
+                    self._spawn_standard_group(clear_points)
+
+    def _get_clear_points(self, points):
+        clear = []
+        for p in points:
+            is_clear = True
+            for enemy in self.enemy_sprites:
+                if hasattr(enemy, 'rect'):
+                    if abs(enemy.rect.centerx - p[0]) < TILESIZE and abs(enemy.rect.centery - p[1]) < TILESIZE:
+                        is_clear = False
+                        break
+            if is_clear:
+                clear.append(p)
+        return clear
 
     def _get_spawn_points(self):
         points = []
@@ -145,16 +140,27 @@ class World:
 
     def _group_by_side(self, points):
         groups = {'left': [], 'right': [], 'top': [], 'bottom': []}
-        mid_x, mid_y = WIDTH // 2, HEIGHT // 2
+        
         for p in points:
-            if p[0] < mid_x - 80: groups['left'].append(p)
-            elif p[0] > mid_x + 80: groups['right'].append(p)
-            elif p[1] < mid_y - 80: groups['top'].append(p)
-            else: groups['bottom'].append(p)
+            dist_left = p[0]
+            dist_right = WIDTH - p[0]
+            dist_top = p[1]
+            dist_bottom = HEIGHT - p[1]
+            
+            min_dist = min(dist_left, dist_right, dist_top, dist_bottom)
+            
+            if min_dist == dist_left:
+                groups['left'].append(p)
+            elif min_dist == dist_right:
+                groups['right'].append(p)
+            elif min_dist == dist_top:
+                groups['top'].append(p)
+            else:
+                groups['bottom'].append(p)
+                
         return groups
 
     def _spawn_standard_group(self, points):
-        """2–5 standard enemies, 2 3 4 much more often"""
         possible = [1, 2, 3, 4, 5, 6]
         weights = [2, 4, 4, 4, 3, 2]
         num = random.choices(possible, weights=weights, k=1)[0]
