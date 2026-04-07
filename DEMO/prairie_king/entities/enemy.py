@@ -18,43 +18,32 @@ class Enemy(pygame.sprite.Sprite):
 
         self.speed = self.base_speed
         self.direction = pygame.math.Vector2(0, 0)
+        self.flash_timer = 0
 
         if self.type == 6:
             self._pick_deployment_target()
 
-        self.flash_timer = 0
-
     def _setup_stats(self):
         if self.type == 0:
-            self.base_speed = random.uniform(1.4, 2.7)
-            self.health = random.randint(1, 3)
+            self.base_speed = 1.8
+            self.health = 1
         else:
-            self.base_speed = 5
+            self.base_speed = 4
             self.health = 2
-            self.deployed = False
 
     def _setup_visual(self):
         try:
-            if self.type == 6:
-                img = pygame.image.load('assets/spikey.png').convert_alpha()
-            else:
-                img = pygame.image.load('assets/enemy.png').convert_alpha()
-            self.image = pygame.transform.scale_by(img, 3)
+            filename = 'assets/spikey.png' if self.type == 6 else 'assets/enemy.png'
+            img = pygame.image.load(filename).convert_alpha()
+            self.image = pygame.transform.scale_by(img, 4)
         except (FileNotFoundError, pygame.error):
             color = (200, 50, 50) if self.type == 0 else (100, 220, 100)
             self.image = pygame.Surface((TILESIZE, TILESIZE))
             self.image.fill(color)
 
-    def _pick_deployment_target(self):
-        self.target_position = (
-            random.randint(100, WIDTH - 100),
-            random.randint(100, HEIGHT - 100)
-        )
-
     def take_damage(self, amount: int = 1):
         self.health -= amount
         self.flash_timer = 120
-
         if self.health <= 0:
             self.kill()
             return True
@@ -89,6 +78,22 @@ class Enemy(pygame.sprite.Sprite):
 
         if not self._is_colliding(new_rect):
             self.rect = new_rect
+            return
+
+        new_rect = self.rect.copy()
+        new_rect.x += int(self.direction.x * self.speed)
+        if not self._is_colliding(new_rect):
+            self.rect = new_rect
+            return
+
+        new_rect = self.rect.copy()
+        new_rect.y += int(self.direction.y * self.speed)
+        if not self._is_colliding(new_rect):
+            self.rect = new_rect
+            return
+
+        self.rect.x += random.randint(-2, 2)
+        self.rect.y += random.randint(-2, 2)
 
     def _update_spikey(self):
         if self.deployed:
@@ -117,24 +122,42 @@ class Enemy(pygame.sprite.Sprite):
 
         if not self._is_colliding(new_rect):
             self.rect = new_rect
+            return
+
+        new_rect = self.rect.copy()
+        new_rect.x += int(self.direction.x * self.speed)
+        if not self._is_colliding(new_rect):
+            self.rect = new_rect
+            return
+
+        new_rect = self.rect.copy()
+        new_rect.y += int(self.direction.y * self.speed)
+        if not self._is_colliding(new_rect):
+            self.rect = new_rect
 
     def _is_colliding(self, test_rect):
         for obstacle in self.obstacle_sprites:
-            if test_rect.colliderect(obstacle.rect):
+            if obstacle.rect.colliderect(test_rect):
                 return True
 
         for sprite in self.groups()[0]:
             if sprite != self and isinstance(sprite, Enemy):
-                if test_rect.colliderect(sprite.rect):
+                if sprite.rect.colliderect(test_rect):
                     return True
         return False
+
+    def _pick_deployment_target(self):
+        self.target_position = (
+            random.randint(120, WIDTH - 120),
+            random.randint(120, HEIGHT - 120)
+        )
 
     def _create_deployed_visual(self):
         try:
             img = pygame.image.load('assets/spikey_deployed.png').convert_alpha()
-            self.image = pygame.transform.scale_by(img, 3)
+            self.image = pygame.transform.scale_by(img, 4)
         except:
-            self.image = pygame.transform.scale(self.image, (int(TILESIZE * 1.3), int(TILESIZE * 1.3)))
+            pass
 
     def draw(self, surface):
         if self.flash_timer > 0:

@@ -1,5 +1,5 @@
 import pygame
-from ..constants import TILESIZE
+from ..constants import TILESIZE, WIDTH, HEIGHT
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, obstacle_sprites):
@@ -7,6 +7,7 @@ class Player(pygame.sprite.Sprite):
         self.obstacle_sprites = obstacle_sprites
         self.direction = pygame.math.Vector2()
         self.speed = 5
+        self.alive = True
 
         try:
             original_image = pygame.image.load('assets/cowboy_idle.png').convert_alpha()
@@ -23,20 +24,35 @@ class Player(pygame.sprite.Sprite):
     def move(self, speed):
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
+
         self.rect.x += int(self.direction.x * speed)
         self._collision('horizontal')
+
         self.rect.y += int(self.direction.y * speed)
         self._collision('vertical')
+
+        self.rect.left = max(0, self.rect.left)
+        self.rect.right = min(WIDTH, self.rect.right)
+        self.rect.top = max(0, self.rect.top)
+        self.rect.bottom = min(HEIGHT, self.rect.bottom)
 
     def _collision(self, direction):
         for sprite in self.obstacle_sprites:
             if sprite.rect.colliderect(self.rect):
                 if direction == 'horizontal':
-                    if self.direction.x > 0: self.rect.right = sprite.rect.left
-                    if self.direction.x < 0: self.rect.left = sprite.rect.right
+                    if self.direction.x > 0:
+                        self.rect.right = sprite.rect.left
+                    if self.direction.x < 0:
+                        self.rect.left = sprite.rect.right
                 if direction == 'vertical':
-                    if self.direction.y > 0: self.rect.bottom = sprite.rect.top
-                    if self.direction.y < 0: self.rect.top = sprite.rect.bottom
+                    if self.direction.y > 0:
+                        self.rect.bottom = sprite.rect.top
+                    if self.direction.y < 0:
+                        self.rect.top = sprite.rect.bottom
+
+    def take_damage(self):
+        self.alive = False
 
     def update(self):
-        self.move(self.speed)
+        if self.alive:
+            self.move(self.speed)
