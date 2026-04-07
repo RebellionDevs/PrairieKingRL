@@ -23,7 +23,7 @@ class Tile(pygame.sprite.Sprite):
             else:
                 img = pygame.image.load('assets/floor_de4.png').convert_alpha()
 
-        except (FileNotFoundError, pygame.error):
-            img = pygame.Surface((TILESIZE, TILESIZE))
+        except Exception:
+            pass
 
         return pygame.transform.scale(img, (TILESIZE, TILESIZE))

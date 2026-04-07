@@ -12,9 +12,12 @@ class Bullet(pygame.sprite.Sprite):
         self.speed = 10
         self.obstacle_sprites = obstacle_sprites
 
-        original_image = pygame.image.load('assets/bullet.png').convert_alpha()
-        self.image = pygame.transform.scale_by(original_image, 2)
-        self.rect = self.image.get_rect(center=pos)
+        try:
+            original_image = pygame.image.load('assets/bullet.png').convert_alpha()
+            self.image = pygame.transform.scale_by(original_image, 2)
+            self.rect = self.image.get_rect(center=pos)
+        except Exception:
+            pass
 
     def update(self):
         self.rect.x += int(self.direction.x * self.speed)

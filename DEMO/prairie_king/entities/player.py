@@ -12,9 +12,7 @@ class Player(pygame.sprite.Sprite):
             original_image = pygame.image.load('assets/cowboy_idle.png').convert_alpha()
             self.image = pygame.transform.scale_by(original_image, 4)
         except Exception:
-            self.image = pygame.Surface((TILESIZE * 2, TILESIZE * 2), pygame.SRCALPHA)
-            self.image.fill((255, 215, 0, 200))
-            pygame.draw.rect(self.image, (139, 69, 19), (25, 35, 35, 55))
+            pass
 
         self.rect = self.image.get_rect(topleft=pos)
 

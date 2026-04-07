@@ -17,9 +17,10 @@ class World:
         self.shoot_rate = 26
 
         self.map_data = None
-        self.reset(level=1)
+        self.reset(2)
 
-    def reset(self, level: int = 1):
+    def reset(self, level):
+        self.shoot_cooldown = 0
         self.visible_sprites.empty()
         self.obstacle_sprites.empty()
         self.create_map(level)
@@ -88,8 +89,6 @@ class World:
         for sprite in self.visible_sprites:
             if not isinstance(sprite, Player):
                 surface.blit(sprite.image, sprite.rect)
-
-        self.bullet_sprites.draw(surface)
 
         if self.player:
             surface.blit(self.player.image, self.player.rect)
