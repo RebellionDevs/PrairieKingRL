@@ -4,11 +4,12 @@ import math
 from ..constants import TILESIZE, WIDTH, HEIGHT
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, player, enemy_type: int = 0, obstacle_sprites=None):
+    def __init__(self, pos, groups, player, enemy_type: int = 0, obstacle_sprites=None, on_death=None):
         super().__init__(groups)
         self.player = player
         self.all_enemies = groups[1] 
         self.obstacle_sprites = obstacle_sprites or pygame.sprite.Group()
+        self.on_death = on_death
         self.type = enemy_type
         self.deployed = False
 
@@ -47,6 +48,8 @@ class Enemy(pygame.sprite.Sprite):
     def take_damage(self, amount: int = 1):
         self.health -= amount
         if self.health <= 0:
+            if self.on_death:
+                self.on_death(self.rect.center)
             self.kill()
             return True
         return False
@@ -92,7 +95,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def _apply_separation(self):
         separation_vec = pygame.math.Vector2(0, 0)
-        neighbor_dist = TILESIZE * 0.9
+        neighbor_dist = TILESIZE * 0.95
         
         for enemy in self.all_enemies:
             if enemy == self:
@@ -102,7 +105,7 @@ class Enemy(pygame.sprite.Sprite):
             dist = diff.length()
             
             if 0 < dist < neighbor_dist:
-                separation_vec += diff.normalize() * (neighbor_dist - dist) * 0.2
+                separation_vec += diff.normalize() * (neighbor_dist - dist) * 0.15
 
         if separation_vec.length() > 0:
             new_rect = self.rect.copy()

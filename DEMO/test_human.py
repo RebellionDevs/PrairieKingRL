@@ -65,12 +65,6 @@ def test_drawing():
             print("Game Over - Player died!")
             obs, _ = env.reset()
 
-        # Optional: show some info
-        pygame.display.set_caption(
-            f"Level {env.world.current_level} | Wave {env.world.current_wave} | "
-            f"Enemies: {len(env.world.enemy_sprites)} | FPS: {env.clock.get_fps():.1f}"
-        )
-
     env.close()
 
 
