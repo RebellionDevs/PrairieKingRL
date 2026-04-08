@@ -7,7 +7,7 @@ plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 
 def plot_training_data():
-    csv_path = "../logs/training_data.csv"
+    csv_path = "./logs/training_data.csv"
     
     if not os.path.exists(csv_path):
         print(f"File not found: {csv_path}")

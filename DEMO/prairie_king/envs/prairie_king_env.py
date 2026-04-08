@@ -27,16 +27,17 @@ class PrairieKingEnv(gym.Env):
         
         self.prev_enemy_count = 0
         self.prev_level = 1
+        self.ticks_survived = 0
 
         self.action_space = spaces.MultiDiscrete([9, 9])
-        
-        self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(42,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(46,), dtype=np.float32)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.world.reset(level=1)
         self.prev_enemy_count = 0
         self.prev_level = 1
+        self.ticks_survived = 0
         
         if self.render_mode == "human":
             self.render()
@@ -44,10 +45,10 @@ class PrairieKingEnv(gym.Env):
 
     def step(self, action):
         move_action, shoot_action = action
-        
         current_enemy_count = len(self.world.enemy_sprites)
 
         self.world.step(move_action)
+        self.ticks_survived += 1
 
         if shoot_action != 0:
             shoot_index = shoot_action - 1
@@ -67,7 +68,8 @@ class PrairieKingEnv(gym.Env):
             "level": self.world.current_level,
             "enemies_killed": max(0, current_enemy_count - len(self.world.enemy_sprites)),
             "active_enemies": len(self.world.enemy_sprites),
-            "obtained_powerup": getattr(self.world, 'last_step_pickup', False)
+            "obtained_powerup": getattr(self.world, 'last_step_pickup', False),
+            "ticks_survived": self.ticks_survived
         }
 
         if self.render_mode == "human":
@@ -77,7 +79,7 @@ class PrairieKingEnv(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def _get_obs(self):
-        obs = np.zeros(42, dtype=np.float32)
+        obs = np.zeros(46, dtype=np.float32)
         p = self.world.player
         if not p or not p.alive:
             return obs
@@ -116,6 +118,22 @@ class PrairieKingEnv(gym.Env):
         obs[40] = self.world.star_timer / 720.0
         obs[41] = min(len(self.world.enemy_sprites) / 30.0, 1.0)
 
+        quads = [0, 0, 0, 0]
+        total_e = len(self.world.enemy_sprites)
+        if total_e > 0:
+            for enemy in self.world.enemy_sprites:
+                ex, ey = enemy.rect.centerx, enemy.rect.centery
+                if ey < HEIGHT / 2:
+                    if ex < WIDTH / 2: quads[0] += 1
+                    else: quads[1] += 1
+                else:
+                    if ex < WIDTH / 2: quads[2] += 1
+                    else: quads[3] += 1
+            obs[42] = quads[0] / total_e
+            obs[43] = quads[1] / total_e
+            obs[44] = quads[2] / total_e
+            obs[45] = quads[3] / total_e
+
         return obs
 
     def _is_obstacle_at(self, x, y):
@@ -126,24 +144,20 @@ class PrairieKingEnv(gym.Env):
 
     def _compute_reward(self, prev_enemy_count):
         reward = self.strategy.survival_reward
-
         if not self.world.player.alive:
             return self.strategy.death_penalty
-
         current_enemy_count = len(self.world.enemy_sprites)
         if current_enemy_count < prev_enemy_count:
             killed = prev_enemy_count - current_enemy_count
             reward += killed * self.strategy.kill_reward
-
         if self.world.current_level != self.prev_level:
             reward += self.strategy.level_bonus
             self.prev_level = self.world.current_level
-
         if self.world.last_step_pickup:
             reward += self.strategy.powerup_pickup_bonus
-
-        reward -= (current_enemy_count * 0.005)
-
+        if self.ticks_survived > 0 and self.ticks_survived % 500 == 0:
+            reward += 5.0
+        reward -= (current_enemy_count * 0.001)
         return reward
 
     def render(self):
