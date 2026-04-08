@@ -204,7 +204,7 @@ class World:
         return groups
 
     def _maybe_drop_powerup(self, pos):
-        if random.random() < 0.07:
+        if random.random() < 0.015:
             self._drop_powerup(pos)
 
     def _drop_powerup(self, pos):

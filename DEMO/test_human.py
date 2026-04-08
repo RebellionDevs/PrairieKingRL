@@ -55,14 +55,11 @@ def test_drawing():
         elif keys[pygame.K_m]:
             shoot_action = 8                # shoot down-right
 
-        # Combine into one action for the environment
         action = [move_action, shoot_action]
 
-        # Step the environment
         obs, reward, terminated, truncated, info = env.step(action)
 
         if terminated:
-            print("Game Over - Player died!")
             obs, _ = env.reset()
 
     env.close()
