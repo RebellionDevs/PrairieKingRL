@@ -2,11 +2,14 @@ import pygame
 from ..constants import TILESIZE
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, tile_type: int):
+    def __init__(self, pos, groups, tile_type: int, render_mode=None):
         super().__init__(groups)
         self.tile_type = tile_type
-        self.image = self._load_image(tile_type)
-        self.rect = self.image.get_rect(topleft=pos)
+        if render_mode == "human":
+            self.image = self._load_image(tile_type)
+            self.rect = self.image.get_rect(topleft=pos)
+        else:
+            self.rect = pygame.Rect(pos[0], pos[1], TILESIZE, TILESIZE)
 
     def _load_image(self, tile_type: int) -> pygame.Surface:
         try:
@@ -22,8 +25,8 @@ class Tile(pygame.sprite.Sprite):
                 img = pygame.image.load('assets/logs.png').convert_alpha()
             else:
                 img = pygame.image.load('assets/floor_de4.png').convert_alpha()
-
+            return pygame.transform.scale(img, (TILESIZE, TILESIZE))
         except Exception:
-            pass
-
-        return pygame.transform.scale(img, (TILESIZE, TILESIZE))
+            img = pygame.Surface((TILESIZE, TILESIZE))
+            img.fill((80, 80, 80))
+            return img

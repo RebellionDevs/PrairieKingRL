@@ -2,20 +2,23 @@ import pygame
 from ..constants import TILESIZE, WIDTH, HEIGHT
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, obstacle_sprites):
+    def __init__(self, pos, groups, obstacle_sprites, render_mode=None):
         super().__init__(groups)
         self.obstacle_sprites = obstacle_sprites
         self.direction = pygame.math.Vector2()
         self.speed = 5
         self.alive = True
 
-        try:
-            original_image = pygame.image.load('assets/cowboy_idle.png').convert_alpha()
-            self.image = pygame.transform.scale_by(original_image, 4)
-        except Exception:
-            pass
-
-        self.rect = self.image.get_rect(topleft=pos)
+        if render_mode == "human":
+            try:
+                original_image = pygame.image.load('assets/cowboy_idle.png').convert_alpha()
+                self.image = pygame.transform.scale_by(original_image, 4)
+            except Exception:
+                self.image = pygame.Surface((TILESIZE, TILESIZE))
+                self.image.fill((200, 200, 50))
+            self.rect = self.image.get_rect(topleft=pos)
+        else:
+            self.rect = pygame.Rect(pos[0], pos[1], TILESIZE, TILESIZE)
 
     def set_direction(self, dx: int, dy: int):
         self.direction.x = float(dx)

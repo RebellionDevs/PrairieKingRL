@@ -9,7 +9,8 @@ from .entities.enemy import Enemy
 from .entities.powerup import PowerUp
 
 class World:
-    def __init__(self):
+    def __init__(self, render_mode=None):
+        self.render_mode = render_mode
         self.visible_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
         self.bullet_sprites = pygame.sprite.Group()
@@ -63,13 +64,15 @@ class World:
                 x = col_index * TILESIZE
                 y = row_index * TILESIZE
                 if tile_type != 99:
-                    tile = Tile((x, y), [self.visible_sprites], tile_type)
+                    tile_groups = [self.visible_sprites] if self.render_mode == "human" else []
+                    tile = Tile((x, y), tile_groups, tile_type, render_mode=self.render_mode)
                     if tile_type in (1, 6):
                         self.obstacle_sprites.add(tile)
 
         center_x = (WIDTH // 2) - (TILESIZE // 2)
         center_y = (HEIGHT // 2) - (TILESIZE // 2)
-        self.player = Player((center_x, center_y), [self.visible_sprites], self.obstacle_sprites)
+        player_groups = [self.visible_sprites] if self.render_mode == "human" else []
+        self.player = Player((center_x, center_y), player_groups, self.obstacle_sprites, render_mode=self.render_mode)
 
     def step(self, move_action: int):
         if not self.player or not self.player.alive:
@@ -89,9 +92,10 @@ class World:
 
         for item in self.spawn_queue[:]:
             if item['delay'] <= 0:
-                Enemy(item['pos'], [self.visible_sprites, self.enemy_sprites], self.player,
+                enemy_groups = [self.visible_sprites, self.enemy_sprites] if self.render_mode == "human" else [self.enemy_sprites]
+                Enemy(item['pos'], enemy_groups, self.player,
                       enemy_type=item['type'], obstacle_sprites=self.obstacle_sprites,
-                      on_death=self._maybe_drop_powerup)
+                      on_death=self._maybe_drop_powerup, render_mode=self.render_mode)
                 self.spawn_queue.remove(item)
             else:
                 item['delay'] -= 1
@@ -209,7 +213,8 @@ class World:
 
     def _drop_powerup(self, pos):
         power_types = ["coffee", "machinegun", "shotgun", "wheel", "star"]
-        PowerUp(pos, [self.visible_sprites, self.powerup_sprites], random.choice(power_types))
+        powerup_groups = [self.visible_sprites, self.powerup_sprites] if self.render_mode == "human" else [self.powerup_sprites]
+        PowerUp(pos, powerup_groups, random.choice(power_types), render_mode=self.render_mode)
 
     def shoot(self, direction):
         if not self.player or not self.player.alive or self.shoot_cooldown > 0:
@@ -255,7 +260,8 @@ class World:
         )
 
         for d in final_directions:
-            Bullet(spawn_pos, (d.x, d.y), [self.visible_sprites, self.bullet_sprites], self.obstacle_sprites)
+            bullet_groups = [self.visible_sprites, self.bullet_sprites] if self.render_mode == "human" else [self.bullet_sprites]
+            Bullet(spawn_pos, (d.x, d.y), bullet_groups, self.obstacle_sprites, render_mode=self.render_mode)
 
     def render(self, surface=None):
         if surface is None: return
