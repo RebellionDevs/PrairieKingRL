@@ -24,7 +24,7 @@ class World:
         self.shoot_rate = 22
 
         self.wave_timer = 0
-        self.wave_duration = 5400
+        self.wave_duration = 540
         self.spawn_timer = 0
 
         self.coffee_timer = 0
@@ -32,8 +32,6 @@ class World:
         self.shotgun_timer = 0
         self.wheel_timer = 0
         self.star_timer = 0
-
-        self.reset(level=1)
 
     def reset(self, level):
         self.visible_sprites.empty()
@@ -45,6 +43,7 @@ class World:
 
         self.current_level = level
         self.shoot_cooldown = 0
+        self.shoot_rate = 22
         self.wave_timer = 0
         self.spawn_timer = 180
 
@@ -116,7 +115,7 @@ class World:
         self._check_powerup_pickup()
 
         if self.wave_timer >= self.wave_duration and len(self.enemy_sprites) == 0:
-            self.reset(level=self.current_level + 1)
+            self.reset(((self.current_level + 1) % 3) + 1)
 
         if self.coffee_timer > 0:
             self.coffee_timer -= 1
