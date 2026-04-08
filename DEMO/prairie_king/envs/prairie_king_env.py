@@ -23,7 +23,7 @@ class PrairieKingEnv(gym.Env):
             self.screen = None
             self.clock = None
 
-        self.world = World()
+        self.world = World(render_mode=render_mode)
         
         self.prev_enemy_count = 0
         self.prev_level = 1

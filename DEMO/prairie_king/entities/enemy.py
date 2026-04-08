@@ -4,19 +4,25 @@ import math
 from ..constants import TILESIZE, WIDTH, HEIGHT
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, player, enemy_type: int = 0, obstacle_sprites=None, on_death=None):
+    def __init__(self, pos, groups, player, enemy_type: int = 0, obstacle_sprites=None, on_death=None, render_mode=None):
         super().__init__(groups)
         self.player = player
-        self.all_enemies = groups[1] 
+        self.all_enemies = groups[-1]  # enemy_sprites is always the last (or only) group
         self.obstacle_sprites = obstacle_sprites or pygame.sprite.Group()
         self.on_death = on_death
         self.type = enemy_type
         self.deployed = False
+        self.render_mode = render_mode
 
         self._setup_stats()
-        self._setup_visual()
+        if render_mode == "human":
+            self._setup_visual()
+        else:
+            self.rect = pygame.Rect(0, 0, TILESIZE, TILESIZE)
+            self.rect.center = pos
 
-        self.rect = self.image.get_rect(center=pos)
+        if render_mode == "human":
+            self.rect = self.image.get_rect(center=pos)
         self.speed = self.base_speed
         self.direction = pygame.math.Vector2(0, 0)
         self.flash_timer = 0
@@ -149,6 +155,8 @@ class Enemy(pygame.sprite.Sprite):
         self.target_position = (WIDTH // 2, HEIGHT // 2)
 
     def _create_deployed_visual(self):
+        if self.render_mode != "human":
+            return
         try:
             img = pygame.image.load('assets/spikey_deployed.png').convert_alpha()
             self.image = pygame.transform.scale_by(img, 1.3)

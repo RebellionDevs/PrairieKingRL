@@ -2,14 +2,18 @@ import pygame
 from ..constants import TILESIZE
 
 class PowerUp(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, power_type: str):
+    def __init__(self, pos, groups, power_type: str, render_mode=None):
         super().__init__(groups)
         self.power_type = power_type
         self.lifetime = 720
         self.flash_start = 180
 
-        self._load_sprite()
-        self.rect = self.image.get_rect(center=pos)
+        if render_mode == "human":
+            self._load_sprite()
+            self.rect = self.image.get_rect(center=pos)
+        else:
+            self.rect = pygame.Rect(0, 0, TILESIZE, TILESIZE)
+            self.rect.center = pos
 
     def _load_sprite(self):
         try:
