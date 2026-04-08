@@ -103,7 +103,7 @@ try:
         callback=[logger_callback, checkpoint_callback]
     )
 except KeyboardInterrupt:
-    print("\n\n⛔ Training stopped by user (Ctrl+C)")
+    print("\n\nTraining stopped by user (Ctrl+C)")
     logger_callback._on_training_end()
     model.save("prairie_king_balanced_interrupted")
     print("Model and all data saved successfully!")
