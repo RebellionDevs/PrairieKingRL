@@ -44,6 +44,7 @@ class PrairieKingEnv(gym.Env):
 
     def step(self, action):
         move_action, shoot_action = action
+        
         current_enemy_count = len(self.world.enemy_sprites)
 
         self.world.step(move_action)
@@ -65,7 +66,8 @@ class PrairieKingEnv(gym.Env):
         info = {
             "level": self.world.current_level,
             "enemies_killed": max(0, current_enemy_count - len(self.world.enemy_sprites)),
-            "active_enemies": len(self.world.enemy_sprites)
+            "active_enemies": len(self.world.enemy_sprites),
+            "obtained_powerup": getattr(self.world, 'last_step_pickup', False)
         }
 
         if self.render_mode == "human":
@@ -117,8 +119,8 @@ class PrairieKingEnv(gym.Env):
         return obs
 
     def _is_obstacle_at(self, x, y):
-        for obs in self.world.obstacle_sprites:
-            if obs.rect.collidepoint(x, y):
+        for obstacle in self.world.obstacle_sprites:
+            if obstacle.rect.collidepoint(x, y):
                 return True
         return False
 
@@ -126,16 +128,19 @@ class PrairieKingEnv(gym.Env):
         reward = self.strategy.survival_reward
 
         if not self.world.player.alive:
-            reward += self.strategy.death_penalty
-            return reward
+            return self.strategy.death_penalty
 
         current_enemy_count = len(self.world.enemy_sprites)
         if current_enemy_count < prev_enemy_count:
-            reward += (prev_enemy_count - current_enemy_count) * self.strategy.kill_reward
+            killed = prev_enemy_count - current_enemy_count
+            reward += killed * self.strategy.kill_reward
 
-        if self.world.current_level > self.prev_level:
+        if self.world.current_level != self.prev_level:
             reward += self.strategy.level_bonus
             self.prev_level = self.world.current_level
+
+        if self.world.last_step_pickup:
+            reward += self.strategy.powerup_pickup_bonus
 
         reward -= (current_enemy_count * 0.005)
 

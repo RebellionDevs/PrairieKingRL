@@ -17,6 +17,7 @@ class World:
         self.powerup_sprites = pygame.sprite.Group()
 
         self.player = None
+        self.last_step_pickup = False
         self.current_level = 1
         self.spawn_queue = []
 
@@ -24,7 +25,7 @@ class World:
         self.shoot_rate = 22
 
         self.wave_timer = 0
-        self.wave_duration = 540
+        self.wave_duration = 5400
         self.spawn_timer = 0
 
         self.coffee_timer = 0
@@ -73,6 +74,8 @@ class World:
     def step(self, move_action: int):
         if not self.player or not self.player.alive:
             return
+        
+        self.last_step_pickup = False
 
         dirs = {0:(0,0),1:(0,-1),2:(0,1),3:(-1,0),4:(1,0),
                 5:(-1,-1),6:(1,-1),7:(-1,1),8:(1,1)}
@@ -112,7 +115,8 @@ class World:
         if pygame.sprite.spritecollideany(self.player, self.enemy_sprites):
             self.player.take_damage()
 
-        self._check_powerup_pickup()
+        if self._check_powerup_pickup():
+            self.last_step_pickup = True
 
         if self.wave_timer >= self.wave_duration and len(self.enemy_sprites) == 0:
             self.reset(((self.current_level + 1) % 3) + 1)
@@ -132,9 +136,13 @@ class World:
                 self.shoot_rate = 22
 
     def _check_powerup_pickup(self):
-        if not self.player: return
+        if not self.player: return False
         picked = pygame.sprite.spritecollide(self.player, self.powerup_sprites, True)
-        for p in picked: self._apply_powerup(p.power_type)
+        if picked:
+            for p in picked: 
+                self._apply_powerup(p.power_type)
+            return True
+        return False
 
     def _apply_powerup(self, power_type):
         if power_type == "coffee":

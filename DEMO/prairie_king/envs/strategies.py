@@ -9,6 +9,7 @@ class RewardStrategy:
     level_bonus: float = 0.0
     accuracy_bonus: float = 0.0
     miss_penalty: float = 0.0
+    powerup_pickup_bonus: float = 0.0
 
 STRATEGIES = {
     "balanced" : RewardStrategy(
@@ -17,5 +18,6 @@ STRATEGIES = {
         kill_reward=10.0,
         death_penalty=-80.0,
         level_bonus=40.0,
+        powerup_pickup_bonus=5.0,
     )
 }
