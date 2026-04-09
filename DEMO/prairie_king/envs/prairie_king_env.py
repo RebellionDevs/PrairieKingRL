@@ -165,11 +165,11 @@ class PrairieKingEnv(gym.Env):
                 distances = [np.linalg.norm(np.array(p_pos) - np.array(e.rect.center)) 
                             for e in self.world.enemy_sprites]
                 min_dist = min(distances)
-                dist_bonus = (min_dist / WIDTH) * 2.0 
+                dist_bonus = (1.0 - min_dist / WIDTH) * 2.0 
                 reward += dist_bonus
 
         if self.world.current_level != self.prev_level:
-            reward += self.strategy.level_bonus * 2
+            reward += self.strategy.level_bonus
             self.prev_level = self.world.current_level
 
         if self.world.last_step_pickup:
