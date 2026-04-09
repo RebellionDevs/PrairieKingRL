@@ -76,7 +76,6 @@ if os.path.exists(model_path):
     model = PPO.load(model_path, env=vec_env, verbose=1)
 else:
     print("Starting fresh training...")
-    ent_coef_schedule = lambda progress_remaining: 0.003 + progress_remaining * (0.05 - 0.003)
     model = PPO(
         "MlpPolicy",
         vec_env,
@@ -86,7 +85,7 @@ else:
         batch_size=512,
         n_epochs=10,
         gamma=0.999,
-        ent_coef=ent_coef_schedule,
+        ent_coef=0.5,
         policy_kwargs=dict(net_arch=[256, 256]),
         tensorboard_log="./logs/PrairieKing_Balanced/",
         device="auto"
