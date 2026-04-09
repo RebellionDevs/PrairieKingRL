@@ -28,6 +28,7 @@ class PrairieKingEnv(gym.Env):
         self.prev_enemy_count = 0
         self.prev_level = 1
         self.ticks_survived = 0
+        self.current_shoot_action = 0
 
         self.action_space = spaces.MultiDiscrete([9, 9])
         self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(46,), dtype=np.float32)
@@ -38,6 +39,7 @@ class PrairieKingEnv(gym.Env):
         self.prev_enemy_count = 0
         self.prev_level = 1
         self.ticks_survived = 0
+        self.current_shoot_action = 0
         
         if self.render_mode == "human":
             self.render()
@@ -45,6 +47,7 @@ class PrairieKingEnv(gym.Env):
 
     def step(self, action):
         move_action, shoot_action = action
+        self.current_shoot_action = shoot_action
         current_enemy_count = len(self.world.enemy_sprites)
 
         self.world.step(move_action)
@@ -143,21 +146,43 @@ class PrairieKingEnv(gym.Env):
         return False
 
     def _compute_reward(self, prev_enemy_count):
-        reward = self.strategy.survival_reward
+        if self.world.wave_timer < self.world.wave_duration:
+            reward = self.strategy.survival_reward
+        else:
+            reward = 0.0 
+
         if not self.world.player.alive:
             return self.strategy.death_penalty
+            
         current_enemy_count = len(self.world.enemy_sprites)
+        p_pos = self.world.player.rect.center
+
         if current_enemy_count < prev_enemy_count:
             killed = prev_enemy_count - current_enemy_count
             reward += killed * self.strategy.kill_reward
+            
+            if current_enemy_count > 0:
+                distances = [np.linalg.norm(np.array(p_pos) - np.array(e.rect.center)) 
+                            for e in self.world.enemy_sprites]
+                min_dist = min(distances)
+                dist_bonus = (min_dist / WIDTH) * 2.0 
+                reward += dist_bonus
+
         if self.world.current_level != self.prev_level:
-            reward += self.strategy.level_bonus
+            reward += self.strategy.level_bonus * 2
             self.prev_level = self.world.current_level
+
         if self.world.last_step_pickup:
             reward += self.strategy.powerup_pickup_bonus
-        if self.ticks_survived > 0 and self.ticks_survived % 500 == 0:
-            reward += 5.0
-        reward -= (current_enemy_count * 0.001)
+
+        if self.current_shoot_action != 0:
+            reward -= 0.1
+            
+        if self.world.wave_timer > self.world.wave_duration:
+            overtime = self.world.wave_timer - self.world.wave_duration
+            reward -= 0.005 * overtime 
+
+        reward -= (current_enemy_count * 0.01)
         return reward
 
     def render(self):

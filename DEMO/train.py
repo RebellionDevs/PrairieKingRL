@@ -17,7 +17,7 @@ class Logger(BaseCallback):
         self.episode_data = []
         self.episode_count = 0
         self.best_mean_reward = -np.inf
-        self.save_freq = 50000
+        self.save_freq = 500_000
         self.last_time_save = 0
         
         os.makedirs(log_dir, exist_ok=True)
@@ -45,7 +45,7 @@ class Logger(BaseCallback):
             }
             self.episode_data.append(data)
 
-            if self.episode_count % 50 == 0:
+            if self.episode_count % 100 == 0:
                 self._save_data()
                 recent_rewards = [d["total_reward"] for d in self.episode_data[-50:]]
                 current_mean = np.mean(recent_rewards)
@@ -78,11 +78,11 @@ else:
         "MlpPolicy",
         vec_env,
         verbose=1,
-        learning_rate=1e-4,
+        learning_rate=1e-5,
         n_steps=2048,
         batch_size=512,
         n_epochs=10,
-        ent_coef=0.05,
+        ent_coef=0.07,
         tensorboard_log="./logs/PrairieKing_Balanced/",
         device="auto"
     )
@@ -93,7 +93,7 @@ print("\nTraining started. Press Ctrl+C to stop.\n")
 
 try:
     model.learn(
-        total_timesteps=10_000_000,
+        total_timesteps=100_000_000,
         callback=logger_callback,
         reset_num_timesteps=False
     )

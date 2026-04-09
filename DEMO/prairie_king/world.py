@@ -26,7 +26,7 @@ class World:
         self.shoot_rate = 22
 
         self.wave_timer = 0
-        self.wave_duration = 5400
+        self.wave_duration = 5500
         self.spawn_timer = 0
 
         self.coffee_timer = 0
@@ -107,7 +107,7 @@ class World:
         if self.spawn_timer > 0:
             self.spawn_timer -= 1
 
-        if self.spawn_timer <= 0:
+        if self.spawn_timer <= 0 and self.wave_timer < self.wave_duration:
             self.spawn_wave()
             self.spawn_timer = 600
 
@@ -180,6 +180,7 @@ class World:
             else:
                 possible = [1, 2, 3, 4, 5, 6]
                 weights = [1, 3, 4, 4, 3, 2]
+
                 num = random.choices(possible, weights=weights, k=1)[0]
                 
                 for i in range(num):
@@ -208,7 +209,7 @@ class World:
         return groups
 
     def _maybe_drop_powerup(self, pos):
-        if random.random() < 0.015:
+        if random.random() < 0.10:
             self._drop_powerup(pos)
 
     def _drop_powerup(self, pos):
