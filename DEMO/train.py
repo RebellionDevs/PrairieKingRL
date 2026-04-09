@@ -31,21 +31,23 @@ class Logger(BaseCallback):
             if self.verbose > 0:
                 print(f"Saved latest model checkpoint to {path}")
 
-        if self.locals.get("dones") is not None and self.locals["dones"][0]:
-            self.episode_count += 1
-            info = self.locals["infos"][0]
+        if self.locals.get("dones") is not None:
+            for env_idx, done in enumerate(self.locals["dones"]):
+                if done:
+                    self.episode_count += 1
+                    info = self.locals["infos"][env_idx]
 
-            data = {
-                "episode": self.episode_count,
-                "timestep": self.num_timesteps,
-                "total_reward": round(float(self.locals["rewards"][0]), 4),
-                "episode_length": info.get("ticks_survived", 0),
-                "level_reached": info.get("level", 1),
-                "enemies_killed": info.get("enemies_killed", 0),
-            }
-            self.episode_data.append(data)
+                    data = {
+                        "episode": self.episode_count,
+                        "timestep": self.num_timesteps,
+                        "total_reward": round(float(self.locals["rewards"][env_idx]), 4),
+                        "episode_length": info.get("ticks_survived", 0),
+                        "level_reached": info.get("level", 1),
+                        "enemies_killed": info.get("enemies_killed", 0),
+                    }
+                    self.episode_data.append(data)
 
-            if self.episode_count % 100 == 0:
+            if self.episode_count % 100 == 0 and self.episode_data:
                 self._save_data()
                 recent_rewards = [d["total_reward"] for d in self.episode_data[-50:]]
                 current_mean = np.mean(recent_rewards)
@@ -74,15 +76,18 @@ if os.path.exists(model_path):
     model = PPO.load(model_path, env=vec_env, verbose=1)
 else:
     print("Starting fresh training...")
+    ent_coef_schedule = lambda progress_remaining: 0.003 + progress_remaining * (0.05 - 0.003)
     model = PPO(
         "MlpPolicy",
         vec_env,
         verbose=1,
-        learning_rate=1e-5,
-        n_steps=2048,
+        learning_rate=3e-4,
+        n_steps=4096,
         batch_size=512,
         n_epochs=10,
-        ent_coef=0.07,
+        gamma=0.999,
+        ent_coef=ent_coef_schedule,
+        policy_kwargs=dict(net_arch=[256, 256]),
         tensorboard_log="./logs/PrairieKing_Balanced/",
         device="auto"
     )
