@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import pygame
 import numpy as np
+import math
 from ..world import World
 from ..constants import WIDTH, HEIGHT, FPS, TILESIZE
 from .strategies import STRATEGIES
@@ -14,14 +15,22 @@ class PrairieKingEnv(gym.Env):
         self.render_mode = render_mode
         self.strategy = STRATEGIES["balanced"]
 
+        self.show_debug_vectors = False
+        self.show_info_panel = True
+        self.last_reward = 0.0
+        self.episode_reward = 0.0
+
         if render_mode == "human":
             pygame.init()
+            pygame.font.init()
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
             self.clock = pygame.time.Clock()
+            self.font = pygame.font.SysFont("Consolas", 13)
             pygame.display.set_caption(f"Prairie King RL - {self.strategy.name}")
         else:
             self.screen = None
             self.clock = None
+            self.font = None
 
         self.world = World(render_mode=render_mode)
         
@@ -29,6 +38,12 @@ class PrairieKingEnv(gym.Env):
         self.prev_level = 1
         self.ticks_survived = 0
         self.current_shoot_action = 0
+        
+        self.total_enemies_killed = 0
+        self.total_shots_fired = 0
+        self.total_powerups_collected = 0
+        self.total_distance_pixels = 0.0
+        self.prev_player_pos = (0, 0)
 
         self.action_space = spaces.MultiDiscrete([9, 9])
         self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(46,), dtype=np.float32)
@@ -40,6 +55,14 @@ class PrairieKingEnv(gym.Env):
         self.prev_level = 1
         self.ticks_survived = 0
         self.current_shoot_action = 0
+        self.last_reward = 0.0
+        self.episode_reward = 0.0
+        
+        self.total_enemies_killed = 0
+        self.total_shots_fired = 0
+        self.total_powerups_collected = 0
+        self.total_distance_pixels = 0.0
+        self.prev_player_pos = self.world.player.rect.center
         
         if self.render_mode == "human":
             self.render()
@@ -52,8 +75,14 @@ class PrairieKingEnv(gym.Env):
 
         self.world.step(move_action)
         self.ticks_survived += 1
+        
+        curr_pos = self.world.player.rect.center
+        dist = math.sqrt((curr_pos[0] - self.prev_player_pos[0])**2 + (curr_pos[1] - self.prev_player_pos[1])**2)
+        self.total_distance_pixels += dist
+        self.prev_player_pos = curr_pos
 
         if shoot_action != 0:
+            self.total_shots_fired += 1
             shoot_index = shoot_action - 1
             shoot_dirs = [
                 (0, -1), (0, 1), (-1, 0), (1, 0),
@@ -64,22 +93,33 @@ class PrairieKingEnv(gym.Env):
         obs = self._get_obs()
         terminated = not self.world.player.alive
         truncated = False
+
+        killed_this_step = max(0, current_enemy_count - len(self.world.enemy_sprites))
+        self.total_enemies_killed += killed_this_step
         
-        reward = self._compute_reward(current_enemy_count)
+        if self.world.last_step_pickup:
+            self.total_powerups_collected += 1
+
+        self.last_reward = self._compute_reward(current_enemy_count)
+        self.episode_reward += self.last_reward
 
         info = {
             "level": self.world.current_level,
-            "enemies_killed": max(0, current_enemy_count - len(self.world.enemy_sprites)),
+            "enemies_killed": self.total_enemies_killed,
             "active_enemies": len(self.world.enemy_sprites),
-            "obtained_powerup": getattr(self.world, 'last_step_pickup', False),
-            "ticks_survived": self.ticks_survived
+            "obtained_powerup": self.world.last_step_pickup,
+            "ticks_survived": self.ticks_survived,
+            "shots_fired": self.total_shots_fired,
+            "powerups_collected": self.total_powerups_collected,
+            "distance_traveled": self.total_distance_pixels,
+            "episode_reward": self.episode_reward
         }
 
         if self.render_mode == "human":
             self.render()
             self.clock.tick(FPS)
 
-        return obs, reward, terminated, truncated, info
+        return obs, self.last_reward, terminated, truncated, info
 
     def _get_obs(self):
         obs = np.zeros(46, dtype=np.float32)
@@ -176,7 +216,7 @@ class PrairieKingEnv(gym.Env):
             reward += self.strategy.powerup_pickup_bonus
 
         if self.current_shoot_action != 0:
-            reward -= 0.1
+            reward -= 0.01
             
         if self.world.wave_timer > self.world.wave_duration:
             overtime = self.world.wave_timer - self.world.wave_duration
@@ -186,9 +226,63 @@ class PrairieKingEnv(gym.Env):
         return reward
 
     def render(self):
-        if self.render_mode == "human" and self.screen:
-            self.world.render(self.screen)
-            pygame.display.flip()
+        if self.render_mode != "human" or not self.screen:
+            return
+
+        for event in pygame.event.get(pygame.KEYDOWN):
+            if event.key == pygame.K_v:
+                self.show_debug_vectors = not self.show_debug_vectors
+            if event.key == pygame.K_i:
+                self.show_info_panel = not self.show_info_panel
+
+        self.world.render(self.screen, show_vectors=self.show_debug_vectors)
+
+        if self.show_info_panel:
+            overlay = pygame.Surface((280, 200), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            self.screen.blit(overlay, (5, 5))
+
+            obs = self._get_obs()
+            enemies = self.world.enemy_sprites
+            p_pos = self.world.player.rect.center
+            
+            danger_level = 0.0
+            if enemies:
+                min_dist = min([np.linalg.norm(np.array(p_pos) - np.array(e.rect.center)) for e in enemies])
+                danger_level = max(0.0, 1.0 - (min_dist / 250.0))
+
+            shoot_dirs = ["NONE", "UP", "DOWN", "LEFT", "RIGHT", "UL", "UR", "DL", "DR"]
+            
+            lines = [
+                f"TOTAL REWARD: {self.episode_reward:.2f}",
+                f"STEP REWARD: {self.last_reward:.4f}",
+                f"DANGER LVL: {danger_level:.1%}",
+                f"WALL SENSOR: {'NEAR' if any(obs[2:10] > 0) else 'CLEAR'}",
+                f"ACTION SHOOT: {shoot_dirs[self.current_shoot_action]}",
+                f"ENEMIES ACT: {len(enemies)}",
+                f"--------------------",
+                f"[V] VECTORS | [I] PANEL"
+            ]
+
+            for i, text in enumerate(lines):
+                color = (255, 255, 255)
+                if "TOTAL REWARD" in text:
+                    color = (255, 215, 0)
+                elif "STEP REWARD" in text:
+                    color = (50, 255, 50) if self.last_reward > 0 else (255, 50, 50)
+                
+                txt_surf = self.font.render(text, True, color)
+                self.screen.blit(txt_surf, (15, 15 + i * 20))
+
+            center_r = (230, 150)
+            pygame.draw.circle(self.screen, (70, 70, 70), center_r, 25, 1)
+            if self.current_shoot_action != 0:
+                dirs = [(0,0), (0,-1), (0,1), (-1,0), (1,0), (-1,-1), (1,-1), (-1,1), (1,1)]
+                vec = dirs[self.current_shoot_action]
+                end_p = (center_r[0] + vec[0]*22, center_r[1] + vec[1]*22)
+                pygame.draw.line(self.screen, (0, 255, 255), center_r, end_p, 3)
+
+        pygame.display.flip()
 
     def close(self):
         if self.render_mode == "human":

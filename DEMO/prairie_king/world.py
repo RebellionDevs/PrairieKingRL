@@ -264,12 +264,40 @@ class World:
             bullet_groups = [self.visible_sprites, self.bullet_sprites] if self.render_mode == "human" else [self.bullet_sprites]
             Bullet(spawn_pos, (d.x, d.y), bullet_groups, self.obstacle_sprites, render_mode=self.render_mode)
 
-    def render(self, surface=None):
-        if surface is None: return
+    def render(self, surface=None, show_vectors=False):
+        if surface is None: 
+            return
+            
         surface.fill('black')
+        
         for sprite in self.visible_sprites:
-            if not isinstance(sprite, (Player, Bullet, Enemy)): surface.blit(sprite.image, sprite.rect)
+            if not isinstance(sprite, (Player, Bullet, Enemy)):
+                surface.blit(sprite.image, sprite.rect)
+                
         self.bullet_sprites.draw(surface)
         self.enemy_sprites.draw(surface)
         self.powerup_sprites.draw(surface)
-        if self.player: surface.blit(self.player.image, self.player.rect)
+        
+        if self.player:
+            surface.blit(self.player.image, self.player.rect)
+            
+            if show_vectors:
+                p_pos = self.player.rect.center
+                
+                for enemy in self.enemy_sprites:
+                    pygame.draw.line(surface, (255, 50, 50), p_pos, enemy.rect.center, 1)
+                    
+                for pu in self.powerup_sprites:
+                    pygame.draw.line(surface, (50, 255, 50), p_pos, pu.rect.center, 2)
+                
+
+                scan_directions = [
+                    (0,-1), (0,1), (-1,0), (1,0), 
+                    (-1,-1), (1,-1), (-1,1), (1,1)
+                ]
+                for d in scan_directions:
+                    end_pos = (
+                        p_pos[0] + d[0] * TILESIZE * 3,
+                        p_pos[1] + d[1] * TILESIZE * 3
+                    )
+                    pygame.draw.line(surface, (255, 255, 0), p_pos, end_pos, 1)

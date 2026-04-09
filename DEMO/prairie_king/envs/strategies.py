@@ -14,7 +14,7 @@ class RewardStrategy:
 STRATEGIES = {
     "balanced" : RewardStrategy(
         name="Balanced",
-        survival_reward=0.0,
+        survival_reward=0.001,
         kill_reward=8.0,
         death_penalty=-400.0,
         level_bonus=500.0,
