@@ -62,15 +62,16 @@ class Logger(BaseCallback):
                         "total_reward": round(float(ep_info['r'] if ep_info else self.locals["rewards"][env_idx]), 4),
                         "episode_length": info.get("ticks_survived", 0),
                         "level_reached": info.get("level", 1),
-                        "enemies_killed": info.get("enemies_killed", 0),
-                        "shots_fired": info.get("shots_fired", 0),
-                        "powerups_collected": info.get("powerups_collected", 0),
+                        "enemies_killed": info.get("enemies_killed", 0.0),
+                        "shots_fired": info.get("shots_fired", 0.0),
+                        "powerups_collected": info.get("powerups_collected", 0.0),
                         "distance_km": round(dist_km, 4)
                     }
                     self.episode_data.append(data)
 
                     self.logger.record("env/enemies_killed", data["enemies_killed"])
                     self.logger.record("env/shots_fired", data["shots_fired"])
+                    self.logger.record("env/powerups_collected", data["powerups_collected"])
                     self.logger.record("env/distance_km", data["distance_km"])
 
             if self.episode_count % 100 == 0 and self.episode_data:
@@ -94,7 +95,7 @@ def make_env():
     return PrairieKingEnv(render_mode=None)
 
 total_training_steps = 100_000_000
-vec_env = make_vec_env(make_env, n_envs=12)
+vec_env = make_vec_env(make_env, n_envs=16)
 model_path = "prairie_king_balanced_final.zip"
 
 if os.path.exists(model_path):
@@ -108,7 +109,7 @@ else:
         verbose=1,
         learning_rate=3e-4,
         n_steps=4096,
-        batch_size=512,
+        batch_size=1024,
         n_epochs=10,
         gamma=0.999,
         ent_coef=0.1,

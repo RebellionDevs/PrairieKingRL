@@ -46,7 +46,7 @@ class PrairieKingEnv(gym.Env):
         self.prev_player_pos = (0, 0)
 
         self.action_space = spaces.MultiDiscrete([9, 9])
-        self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(46,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-2.0, high=2.0, shape=(49,), dtype=np.float32)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -82,13 +82,15 @@ class PrairieKingEnv(gym.Env):
         self.prev_player_pos = curr_pos
 
         if shoot_action != 0:
-            self.total_shots_fired += 1
-            shoot_index = shoot_action - 1
-            shoot_dirs = [
-                (0, -1), (0, 1), (-1, 0), (1, 0),
-                (-1, -1), (1, -1), (-1, 1), (1, 1)
-            ]
-            self.world.shoot(shoot_dirs[shoot_index])
+            if self.world.shoot_cooldown == 0:
+                self.total_shots_fired += 1
+                
+                shoot_index = shoot_action - 1
+                shoot_dirs = [
+                    (0, -1), (0, 1), (-1, 0), (1, 0),
+                    (-1, -1), (1, -1), (-1, 1), (1, 1)
+                ]
+                self.world.shoot(shoot_dirs[shoot_index])
 
         obs = self._get_obs()
         terminated = not self.world.player.alive
@@ -122,7 +124,7 @@ class PrairieKingEnv(gym.Env):
         return obs, self.last_reward, terminated, truncated, info
 
     def _get_obs(self):
-        obs = np.zeros(46, dtype=np.float32)
+        obs = np.zeros(49, dtype=np.float32)
         p = self.world.player
         if not p or not p.alive:
             return obs
@@ -149,17 +151,18 @@ class PrairieKingEnv(gym.Env):
         powerups = sorted(self.world.powerup_sprites, 
                           key=lambda pu: (pu.rect.centerx - p.rect.centerx)**2 + (pu.rect.centery - p.rect.centery)**2)[:3]
         for i, pu in enumerate(powerups):
-            base = 30 + i * 2
+            base = 30 + i * 3
             obs[base] = (pu.rect.centerx - p.rect.centerx) / WIDTH
+            obs[base+1] = (pu.rect.centery - p.rect.centery) / HEIGHT
             pt_map = {"coffee": 0.2, "machinegun": 0.4, "shotgun": 0.6, "wheel": 0.8, "star": 1.0}
-            obs[base+1] = pt_map.get(pu.power_type, 0.0)
+            obs[base+2] = pt_map.get(pu.power_type, 0.0)
 
-        obs[36] = 1.0 if self.world.shoot_cooldown == 0 else 0.0
-        obs[37] = self.world.machinegun_timer / 720.0
-        obs[38] = self.world.shotgun_timer / 720.0
-        obs[39] = self.world.wheel_timer / 720.0
-        obs[40] = self.world.star_timer / 720.0
-        obs[41] = min(len(self.world.enemy_sprites) / 30.0, 1.0)
+        obs[39] = 1.0 if self.world.shoot_cooldown == 0 else 0.0
+        obs[40] = self.world.machinegun_timer / 720.0
+        obs[41] = self.world.shotgun_timer / 720.0
+        obs[42] = self.world.wheel_timer / 720.0
+        obs[43] = self.world.star_timer / 720.0
+        obs[44] = min(len(self.world.enemy_sprites) / 30.0, 1.0)
 
         quads = [0, 0, 0, 0]
         total_e = len(self.world.enemy_sprites)
@@ -172,10 +175,10 @@ class PrairieKingEnv(gym.Env):
                 else:
                     if ex < WIDTH / 2: quads[2] += 1
                     else: quads[3] += 1
-            obs[42] = quads[0] / total_e
-            obs[43] = quads[1] / total_e
-            obs[44] = quads[2] / total_e
-            obs[45] = quads[3] / total_e
+            obs[45] = quads[0] / total_e
+            obs[46] = quads[1] / total_e
+            obs[47] = quads[2] / total_e
+            obs[48] = quads[3] / total_e
 
         return obs
 
@@ -186,27 +189,21 @@ class PrairieKingEnv(gym.Env):
         return False
 
     def _compute_reward(self, prev_enemy_count):
+        reward = 0
         if self.world.wave_timer < self.world.wave_duration:
             reward = self.strategy.survival_reward
         else:
-            reward = 0.0 
+            overtime = self.world.wave_timer - self.world.wave_duration
+            reward -= 0.005 * overtime 
 
         if not self.world.player.alive:
             return self.strategy.death_penalty
             
         current_enemy_count = len(self.world.enemy_sprites)
-        p_pos = self.world.player.rect.center
 
         if current_enemy_count < prev_enemy_count:
             killed = prev_enemy_count - current_enemy_count
             reward += killed * self.strategy.kill_reward
-            
-            if current_enemy_count > 0:
-                distances = [np.linalg.norm(np.array(p_pos) - np.array(e.rect.center)) 
-                            for e in self.world.enemy_sprites]
-                min_dist = min(distances)
-                dist_bonus = (1.0 - min_dist / WIDTH) * 2.0 
-                reward += dist_bonus
 
         if self.world.current_level != self.prev_level:
             reward += self.strategy.level_bonus
@@ -216,11 +213,10 @@ class PrairieKingEnv(gym.Env):
             reward += self.strategy.powerup_pickup_bonus
 
         if self.current_shoot_action != 0:
-            reward -= 0.01
-            
-        if self.world.wave_timer > self.world.wave_duration:
-            overtime = self.world.wave_timer - self.world.wave_duration
-            reward -= 0.005 * overtime 
+            if self.world.shoot_cooldown == 0:
+                reward -= 5
+            else:
+                reward -= 0.001
 
         reward -= (current_enemy_count * 0.01)
         return reward

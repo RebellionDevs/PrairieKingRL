@@ -123,7 +123,7 @@ class World:
             self.last_step_pickup = True
 
         if self.wave_timer >= self.wave_duration and len(self.enemy_sprites) == 0:
-            self.reset(((self.current_level + 1) % 3) + 1)
+            self.reset(((self.current_level) % 3) + 1)
 
         if self.coffee_timer > 0:
             self.coffee_timer -= 1
