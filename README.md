@@ -1,5 +1,6 @@
 # PrairieKingRL
 A Reinforcement Learning agent trained to play **Journey of the Prairie King** — the retro top-down shooter mini-game from Stardew Valley — built from scratch with Pygame and trained using **PPO** via Stable Baselines3.
+
 The primary goal of this project is to develop an AI agent capable of earning the rarest achievement in Stardew Valley: completing "Journey of the Prairie King" without a single death (Fector's Challenge).
 ---
 ## Demo
