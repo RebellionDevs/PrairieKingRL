@@ -2,13 +2,13 @@
 A Reinforcement Learning agent trained to play **Journey of the Prairie King** — the retro top-down shooter mini-game from Stardew Valley — built from scratch with Pygame and trained using **PPO** via Stable Baselines3.
 
 The primary goal of this project is to develop an AI agent capable of earning the rarest achievement in Stardew Valley: completing "Journey of the Prairie King" without a single death (Fector's Challenge).
----
+
 ## Demo
 [![Watch the demo](https://img.youtube.com/vi/9fN6DUlRqzY/maxresdefault.jpg)](https://www.youtube.com/watch?v=9fN6DUlRqzY)
----
+
 ## Overview
 PrairieKingRL is a custom Gymnasium environment that recreates Journey of the Prairie King as an RL training ground. The agent controls a cowboy who must survive waves of enemies across multiple levels, learning to move, shoot, and collect power-ups — all from a compact vector observation.
----
+
 ## Features
 - **Custom Gymnasium environment** built with Pygame
 - **PPO training** via Stable Baselines3 with 16 parallel environments
@@ -23,7 +23,7 @@ PrairieKingRL is a custom Gymnasium environment that recreates Journey of the Pr
 - **5 power-ups**: Coffee (speed), Machine Gun (rapid fire), Shotgun (spread), Wheel (all-direction fire), Star (combo boost)
 - **Live debug overlay** while watching the agent (toggle with `V` / `I` keys)
 - **Training logger** — saves episode stats to CSV and auto-saves best/latest model checkpoints
----
+
 ## Getting Started
 ### Prerequisites
 Install dependencies:
@@ -51,6 +51,6 @@ __________________________________________________________________
 | `I` | Toggle the info overlay panel                             |
 | `ESC` / close window | Exit                                     |
 |_________________________________________________________________|
----
+
 ## 📝 License
 This project is for educational and research purposes. Prairie King is originally a mini-game from [Stardew Valley](https://www.stardewvalley.net/) by ConcernedApe.
