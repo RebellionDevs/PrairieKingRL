@@ -214,9 +214,9 @@ class PrairieKingEnv(gym.Env):
 
         if self.current_shoot_action != 0:
             if self.world.shoot_cooldown == 0:
-                reward -= 5
+                reward -= 8
             else:
-                reward -= 0.001
+                reward -= 0.1
 
         reward -= (current_enemy_count * 0.01)
         return reward
