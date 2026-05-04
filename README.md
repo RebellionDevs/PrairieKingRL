@@ -44,13 +44,11 @@ python human.py
 ```
 This loads the saved model and renders the agent playing in real time.  
 **Controls while watching:**
-__________________________________________________________________
 | Key | Action                                                    |
 |-----|-----------------------------------------------------------|
 | `V` | Toggle debug vectors (enemy/powerup lines + wall sensors) |
 | `I` | Toggle the info overlay panel                             |
 | `ESC` / close window | Exit                                     |
-|_________________________________________________________________|
 
 ## 📝 License
 This project is for educational and research purposes. Prairie King is originally a mini-game from [Stardew Valley](https://www.stardewvalley.net/) by ConcernedApe.
